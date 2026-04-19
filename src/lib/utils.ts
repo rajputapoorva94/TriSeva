@@ -112,8 +112,14 @@ export function getDaysSinceSubmission(createdAt: Date): number {
 
 // Validate National ID format (mock validation)
 export function validateNationalId(nationalId: string): boolean {
-  // Mock validation - accepts format like NID-XXXXXXXXX
-  return /^NID-\d{9}$/.test(nationalId);
+  const cleaned = nationalId.replace(/[^a-zA-Z0-9]/g, '');
+  if (cleaned.length === 16) {
+    return /^\d{16}$/.test(cleaned);
+  }
+  if (cleaned.length === 10) {
+    return /^[A-Za-z0-9]{10}$/.test(cleaned);
+  }
+  return false;
 }
 
 // Generate case number

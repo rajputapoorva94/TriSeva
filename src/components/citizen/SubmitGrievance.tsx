@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ArrowLeft, Upload, FileText, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
-import { generateCaseNumber } from '../../lib/utils';
-import { mockCases, mockDepartments } from '../../lib/mockData';
+import { mockDepartments } from '../../lib/mockData';
 
 interface SubmitGrievanceProps {
   user: User;
@@ -26,10 +25,15 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
     priority: 'MEDIUM' as Priority,
     department: '',
   });
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [successCaseNumber, setSuccessCaseNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -43,42 +47,73 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
       return;
     }
 
-    // Calculate SLA deadline based on priority
-    const slaHours = {
-      URGENT: 48,
-      HIGH: 72,
-      MEDIUM: 120,
-      LOW: 168,
-    };
+    try {
+      setIsSubmitting(true);
 
-    const slaDeadline = new Date();
-    slaDeadline.setHours(slaDeadline.getHours() + slaHours[formData.priority]);
+      const payload = new FormData();
+      payload.append('title', formData.title);
+      payload.append('description', formData.description);
+      payload.append('case_type', formData.type);
+      payload.append('priority', formData.priority);
+      payload.append('department', formData.department);
+      payload.append('citizen_id', user.id);
+      payload.append('citizen_name', user.name);
+      payload.append('citizen_email', user.email);
 
-    const newCase: Case = {
-      id: `CASE${Date.now()}`,
-      caseNumber: generateCaseNumber(formData.type),
-      title: formData.title,
-      description: formData.description,
-      type: formData.type,
-      status: 'SUBMITTED',
-      priority: formData.priority,
-      citizenId: user.id,
-      citizenName: user.name,
-      citizenEmail: user.email,
-      department: formData.department,
-      slaDeadline,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      escalationLevel: 0,
-    };
+      attachments.forEach((file) => {
+        payload.append('attachments', file);
+      });
 
-    // Add to mock data
-    mockCases.push(newCase);
+      const response = await fetch(`${apiBaseUrl}/api/complaints/`, {
+        method: 'POST',
+        body: payload,
+      });
 
-    setSuccess(true);
-    setTimeout(() => {
-      onSubmit(newCase);
-    }, 2000);
+      if (!response.ok) {
+        let detail = 'Failed to submit grievance. Please try again.';
+        try {
+          const errorData = await response.json();
+          if (typeof errorData?.detail === 'string') {
+            detail = errorData.detail;
+          }
+        } catch {
+          // ignore parsing errors
+        }
+        throw new Error(detail);
+      }
+
+      const created = await response.json();
+
+      const newCase: Case = {
+        id: String(created.id),
+        caseNumber: created.case_number,
+        title: created.title,
+        description: created.description,
+        type: created.case_type,
+        status: created.status,
+        priority: created.priority,
+        citizenId: created.citizen_id,
+        citizenName: created.citizen_name,
+        citizenEmail: created.citizen_email,
+        department: created.department,
+        slaDeadline: new Date(created.sla_deadline),
+        createdAt: new Date(created.created_at),
+        updatedAt: new Date(created.updated_at),
+        attachments: (created.attachment_files || []).map((file: { url: string }) => file.url),
+        escalationLevel: 0,
+      };
+
+      setSuccessCaseNumber(created.case_number || '');
+      setSuccess(true);
+      setTimeout(() => {
+        onSubmit(newCase);
+      }, 2000);
+    } catch (submitError) {
+      const message = submitError instanceof Error ? submitError.message : 'Submission failed.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (success) {
@@ -96,7 +131,7 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
             <div className="bg-gray-50 p-4 rounded-lg border mb-6">
               <p className="text-sm text-gray-600">Case Number</p>
               <p className="text-lg text-gray-900 mt-1">
-                Will be generated automatically
+                {successCaseNumber || 'Will be generated automatically'}
               </p>
             </div>
             <Button onClick={onBack}>Return to Dashboard</Button>
@@ -254,7 +289,7 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
                 />
               </div>
 
-              {/* Attachments (Mock) */}
+              {/* Attachments */}
               <div className="space-y-2">
                 <Label>Attachments (Optional)</Label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
@@ -265,6 +300,21 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
                   <p className="text-xs text-gray-500 mt-1">
                     PDF, Images, Documents (Max 10MB each)
                   </p>
+                  <Input
+                    type="file"
+                    multiple
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                    className="mt-4"
+                    onChange={(event) => {
+                      const files = event.target.files ? Array.from(event.target.files) : [];
+                      setAttachments(files);
+                    }}
+                  />
+                  {attachments.length > 0 && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      {attachments.length} file(s) selected
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -273,8 +323,8 @@ export function SubmitGrievance({ user, onBack, onSubmit }: SubmitGrievanceProps
                 <Button type="button" variant="outline" size="sm" onClick={onBack}>
                   Cancel
                 </Button>
-                <Button type="submit" size="sm">
-                  Submit Grievance
+                <Button type="submit" size="sm" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit Grievance'}
                 </Button>
               </div>
 

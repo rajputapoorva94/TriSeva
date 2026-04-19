@@ -23,6 +23,17 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
+  const maskNationalId = (value: string) => {
+    if (!value) return '';
+    const cleaned = value.replace(/[^a-zA-Z0-9]/g, '');
+    if (cleaned.length < 4) return value;
+    const last4 = cleaned.slice(-4);
+    const masked = "*".repeat(cleaned.length - 4);
+    return `${masked}${last4}`;
+  };
+
+  const showMaskedNationalId = citizenId.trim().length >= 4 && !citizenId.includes('@');
+
   const handleCitizenLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -177,11 +188,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                     <Input
                       id="citizen-id"
                       type="text"
-                      placeholder="email@example.com or NID-XXXXXXXXX"
+                      placeholder="username@xyz.com or Aadhaar/PAN number"
                       value={citizenId}
                       onChange={(e) => setCitizenId(e.target.value)}
                       required
                     />
+                    {showMaskedNationalId && (
+                      <p className="text-sm text-gray-600">
+                        Displayed as: {maskNationalId(citizenId)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -203,7 +219,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
 
                 {/* Demo Accounts */}
                 <div className="mt-6 pt-6 border-t">
-                  <p className="text-sm text-gray-600 mb-3">Demo Accounts (click to login):</p>
+                  <p className="text-sm text-gray-600 mb-3">Existing Accounts (click to login):</p>
                   <div className="flex flex-col gap-2">
                     <Button
                       variant="outline"
@@ -274,7 +290,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
 
                 {/* Demo Accounts */}
                 <div className="mt-6 pt-6 border-t">
-                  <p className="text-sm text-gray-600 mb-3">Demo Accounts (click to login):</p>
+                  <p className="text-sm text-gray-600 mb-3">Existing Accounts (click to login):</p>
                   <div className="flex flex-col gap-2">
                     <Button
                       variant="outline"

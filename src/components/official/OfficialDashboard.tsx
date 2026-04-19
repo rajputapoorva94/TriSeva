@@ -301,7 +301,7 @@ function CaseList({ cases, onSelectCase }: { cases: Case[]; onSelectCase: (c: Ca
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-6">
       {sortedCases.map((caseItem) => {
         const overdueFlag = isOverdue(caseItem.slaDeadline) && !['RESOLVED', 'CLOSED'].includes(caseItem.status);
         

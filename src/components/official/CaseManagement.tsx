@@ -303,10 +303,10 @@ export function CaseManagement({ caseData, user, onBack, onUpdate }: CaseManagem
 
         {/* Tabs */}
         <Tabs defaultValue="actions" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="actions">Actions & Status</TabsTrigger>
-            <TabsTrigger value="timeline">Complete Timeline</TabsTrigger>
-            <TabsTrigger value="details">Full Details</TabsTrigger>
+            <TabsList className="portal-toggle--3 w-full">
+              <TabsTrigger value="actions" className="portal-toggle__trigger">Actions & Status</TabsTrigger>
+              <TabsTrigger value="timeline" className="portal-toggle__trigger">Complete Timeline</TabsTrigger>
+              <TabsTrigger value="details" className="portal-toggle__trigger">Full Details</TabsTrigger>
           </TabsList>
 
           {/* Actions Tab */}

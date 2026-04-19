@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { AuthService } from "../../lib/auth";
 import { User } from "../../types";
 import {
@@ -18,7 +19,6 @@ import {
   Shield,
 } from "lucide-react";
 import { Alert, AlertDescription } from "../ui/alert";
-import { validateNationalId } from "../../lib/utils";
 
 interface RegisterPageProps {
   onRegister: (user: User) => void;
@@ -32,6 +32,7 @@ export function RegisterPage({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    nationalIdType: "AADHAR",
     nationalId: "",
     password: "",
     confirmPassword: "",
@@ -40,12 +41,34 @@ export function RegisterPage({
   const [loading, setLoading] = useState(false);
   const [idVerified, setIdVerified] = useState(false);
 
+  const emailPattern = /^[A-Za-z0-9]+@xyz\.com$/;
+
+  const maskNationalId = (value: string) => {
+    if (!value) return '';
+    const cleaned = value.replace(/[^a-zA-Z0-9]/g, '');
+    if (cleaned.length < 4) return value;
+    const last4 = cleaned.slice(-4);
+    const masked = "*".repeat(cleaned.length - 4);
+    return `${masked}${last4}`;
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    const { name, value } = e.target;
+    let nextValue = value;
+
+    if (name === "nationalId") {
+      if (formData.nationalIdType === "AADHAR") {
+        nextValue = value.replace(/\D/g, "").slice(0, 16);
+      } else {
+        nextValue = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 10);
+      }
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: nextValue,
     });
   };
 
@@ -55,10 +78,15 @@ export function RegisterPage({
       return;
     }
 
-    if (!validateNationalId(formData.nationalId)) {
-      setError(
-        "Invalid National ID format. Use format: NID-XXXXXXXXX",
-      );
+    const expectedLength = formData.nationalIdType === "AADHAR" ? 16 : 10;
+    if (formData.nationalId.length !== expectedLength) {
+      const label = formData.nationalIdType === "AADHAR" ? "Aadhaar" : "PAN";
+      setError(`${label} number must be ${expectedLength} digits.`);
+      return;
+    }
+
+    if (formData.nationalIdType === "PAN" && !/^[A-Za-z0-9]{10}$/.test(formData.nationalId)) {
+      setError("PAN must be 10 alphanumeric characters.");
       return;
     }
 
@@ -86,12 +114,18 @@ export function RegisterPage({
       return;
     }
 
+    if (!emailPattern.test(formData.email)) {
+      setError("Email must be in the format alphanumeric@xyz.com");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const user = await AuthService.register({
         name: formData.name,
         email: formData.email,
+        nationalIdType: formData.nationalIdType,
         nationalId: formData.nationalId,
         password: formData.password,
       });
@@ -164,15 +198,51 @@ export function RegisterPage({
                     National ID Verification
                   </Label>
                 </div>
+                <Tabs
+                  value={formData.nationalIdType}
+                  onValueChange={(value) =>
+                    {
+                      setFormData({
+                        ...formData,
+                        nationalIdType: value,
+                        nationalId: "",
+                      });
+                      setIdVerified(false);
+                      setError("");
+                    }
+                  }
+                  className="w-full"
+                >
+                  <TabsList className="portal-toggle w-full mb-3">
+                    <TabsTrigger
+                      value="AADHAR"
+                      className="portal-toggle__trigger"
+                    >
+                      Aadhaar (16 digits)
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="PAN"
+                      className="portal-toggle__trigger"
+                    >
+                      PAN (10 digits)
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 <div className="flex gap-2">
                   <Input
                     id="nationalId"
                     name="nationalId"
                     type="text"
-                    placeholder="NID-XXXXXXXXX"
+                    placeholder={
+                      formData.nationalIdType === "AADHAR"
+                        ? "Enter 16-digit Aadhaar number"
+                        : "Enter 10-digit PAN number"
+                    }
                     value={formData.nationalId}
                     onChange={handleChange}
                     disabled={idVerified}
+                    inputMode={formData.nationalIdType === "AADHAR" ? "numeric" : "text"}
+                    pattern={formData.nationalIdType === "AADHAR" ? "\\d*" : "[A-Za-z0-9]*"}
                     required
                   />
                   {!idVerified ? (
@@ -194,8 +264,15 @@ export function RegisterPage({
                   )}
                 </div>
                 <p className="text-sm text-gray-600">
-                  Format: NID-123456789 (for demo purposes)
+                  {formData.nationalIdType === "AADHAR"
+                    ? "Aadhaar must be 16 digits"
+                    : "PAN must be 10 alphanumeric characters"}
                 </p>
+                {formData.nationalId && (
+                  <p className="text-sm text-gray-600">
+                    Displayed as: {maskNationalId(formData.nationalId)}
+                  </p>
+                )}
               </div>
 
               {/* Personal Information */}
@@ -218,11 +295,14 @@ export function RegisterPage({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="username@xyz.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
+                <p className="text-sm text-gray-600">
+                  Format: alphanumeric@xyz.com
+                </p>
               </div>
 
               {/* Password */}

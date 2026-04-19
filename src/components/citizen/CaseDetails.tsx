@@ -6,10 +6,6 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { ArrowLeft, FileText, Clock, User as UserIcon, Building, Calendar } from 'lucide-react';
 import { 
-  getAuditLogsByCaseId, 
-  getCommentsByCaseId 
-} from '../../lib/mockData';
-import { 
   formatDate, 
   formatDateTime,
   getStatusColor, 
@@ -29,8 +25,8 @@ interface CaseDetailsProps {
 }
 
 export function CaseDetails({ caseData, user, onBack }: CaseDetailsProps) {
-  const auditLogs = getAuditLogsByCaseId(caseData.id);
-  const comments = getCommentsByCaseId(caseData.id).filter(c => !c.isInternal);
+  const auditLogs = [];
+  const comments = [];
 
   return (
     <div className="min-h-screen app-shell">
@@ -141,10 +137,16 @@ export function CaseDetails({ caseData, user, onBack }: CaseDetailsProps) {
 
         {/* Tabs */}
         <Tabs defaultValue="timeline" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="timeline">Timeline & Activity</TabsTrigger>
-            <TabsTrigger value="updates">Updates & Comments</TabsTrigger>
-            <TabsTrigger value="details">Complete Details</TabsTrigger>
+          <TabsList className="portal-toggle--3 w-full">
+            <TabsTrigger value="timeline" className="portal-toggle__trigger">
+              Timeline & Activity
+            </TabsTrigger>
+            <TabsTrigger value="updates" className="portal-toggle__trigger">
+              Updates & Comments
+            </TabsTrigger>
+            <TabsTrigger value="details" className="portal-toggle__trigger">
+              Complete Details
+            </TabsTrigger>
           </TabsList>
 
           {/* Timeline Tab */}

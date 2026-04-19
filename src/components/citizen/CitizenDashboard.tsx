@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Case } from '../../types';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -16,7 +16,6 @@ import {
   LogOut,
   User as UserIcon
 } from 'lucide-react';
-import { getCasesByCitizenId } from '../../lib/mockData';
 import { 
   formatDate, 
   getStatusColor, 
@@ -41,8 +40,61 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  const [cases, setCases] = useState<Case[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
-  const cases = getCasesByCitizenId(user.id);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+  const mapComplaintToCase = (item: any): Case => ({
+    id: String(item.id),
+    caseNumber: item.case_number,
+    title: item.title,
+    description: item.description,
+    type: item.case_type,
+    status: item.status,
+    priority: item.priority,
+    citizenId: item.citizen_id,
+    citizenName: item.citizen_name,
+    citizenEmail: item.citizen_email,
+    department: item.department,
+    slaDeadline: new Date(item.sla_deadline),
+    createdAt: new Date(item.created_at),
+    updatedAt: new Date(item.updated_at),
+    attachments: (item.attachment_files || []).map((file: { url: string }) => file.url),
+    escalationLevel: 0,
+  });
+
+  const loadCases = async () => {
+    setIsLoading(true);
+    setLoadError('');
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/complaints/`);
+      if (!response.ok) {
+        throw new Error('Failed to load cases.');
+      }
+
+      const data = await response.json();
+      const normalized = Array.isArray(data) ? data.map(mapComplaintToCase) : [];
+      setCases(
+        normalized.filter(
+          (caseItem) =>
+            caseItem.citizenId === user.id ||
+            caseItem.citizenEmail === user.email,
+        ),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load cases.';
+      setLoadError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCases();
+  }, [user.id]);
 
   // Calculate statistics
   const stats = {
@@ -78,7 +130,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
         onBack={() => setShowSubmitForm(false)}
         onSubmit={(_newCase) => {
           setShowSubmitForm(false);
-          // In production, would refresh the case list
+          loadCases();
         }}
       />
     );
@@ -233,8 +285,21 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
         </div>
 
         {/* Cases List */}
-        <div className="space-y-4">
-          {filteredCases.length === 0 ? (
+        <div className="space-y-4 pb-6">
+          {loadError && (
+            <Card>
+              <CardContent className="py-6 text-center text-red-600">
+                {loadError}
+              </CardContent>
+            </Card>
+          )}
+          {isLoading ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-gray-600">Loading cases...</p>
+              </CardContent>
+            </Card>
+          ) : filteredCases.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />

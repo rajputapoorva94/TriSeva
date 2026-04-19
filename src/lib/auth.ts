@@ -6,19 +6,49 @@ import { mockUsers } from './mockData';
 // Mock authentication - In production, this would connect to your Spring Boot backend
 export class AuthService {
   private static readonly STORAGE_KEY = 'grievance_auth_user';
+  private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+  private static mapApiUserToClient(payload: any): User {
+    return {
+      id: String(payload.id),
+      name: payload.name,
+      email: payload.email,
+      nationalId: payload.national_id,
+      role: payload.role,
+      createdAt: new Date(payload.created_at),
+    };
+  }
 
   // Login with email/national ID and password
   static async login(identifier: string, password: string): Promise<User | null> {
-    // Mock authentication - accepts any password for demo
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/api/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identifier, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const user = this.mapApiUserToClient(data);
+        this.setCurrentUser(user);
+        return user;
+      }
+    } catch {
+      // fall back to demo data
+    }
+
     const user = mockUsers.find(
       u => u.email === identifier || u.nationalId === identifier
     );
-    
+
     if (user) {
       this.setCurrentUser(user);
       return user;
     }
-    
+
     return null;
   }
 
@@ -26,10 +56,35 @@ export class AuthService {
   static async register(data: {
     name: string;
     email: string;
+    nationalIdType: string;
     nationalId: string;
     password: string;
   }): Promise<User | null> {
-    // Mock registration - In production, this would verify national ID
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/api/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          national_id_type: data.nationalIdType,
+          national_id: data.nationalId,
+          password: data.password,
+        }),
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        const user = this.mapApiUserToClient(payload);
+        this.setCurrentUser(user);
+        return user;
+      }
+    } catch {
+      // fall back to demo registration
+    }
+
     const newUser: User = {
       id: `C${Date.now()}`,
       name: data.name,
@@ -38,7 +93,7 @@ export class AuthService {
       role: 'CITIZEN',
       createdAt: new Date(),
     };
-    
+
     mockUsers.push(newUser);
     this.setCurrentUser(newUser);
     return newUser;
