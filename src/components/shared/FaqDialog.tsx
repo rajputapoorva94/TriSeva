@@ -110,41 +110,44 @@ export function FaqDialog({ open, onOpenChange }: FaqDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageCircleQuestion className="h-5 w-5" />
+      <DialogContent className="w-[94vw] sm:w-[90vw] max-w-[1100px] sm:max-w-[1100px] min-h-[65vh] max-h-[92vh] overflow-y-auto">
+        <DialogHeader className="space-y-2 pb-3 border-b border-[#000080]/10">
+          <DialogTitle className="flex items-center gap-2 text-[#000080] font-display">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm border border-[#000080]/10">
+              <MessageCircleQuestion className="h-5 w-5" />
+            </span>
             TriSeva FAQs
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-base text-gray-800">
             Ask about civic issues like water, roads, electricity, corruption, fire, police, or legal matters.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-          <div className="flex gap-2">
-            <Input
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type your civic issue..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAsk();
-                }
-              }}
-            />
-            <Button onClick={handleAsk}>Ask</Button>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-600 mb-2">Quick examples:</p>
+        <div className="space-y-5 mt-4">
+          <div className="flex flex-col gap-3 rounded-xl border border-[#000080]/15 bg-[#e6f6ff] p-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Type your civic issue..."
+                className="text-base text-gray-900"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAsk();
+                  }
+                }}
+              />
+              <Button onClick={handleAsk} className="shimmer-btn">Ask</Button>
+            </div>
+            <p className="text-base text-gray-800">Quick examples:</p>
             <div className="flex flex-wrap gap-2">
               {sampleQuestions.map((question) => (
                 <Button
                   key={question}
                   variant="outline"
                   size="sm"
+                  className="rounded-full border-[#000080]/20 bg-[#f2f9ff] text-gray-900 hover:bg-[#d6ecff] hover:border-[#000080]/40"
                   onClick={() => {
                     setUserInput(question);
                     setResponse(generateResponse(question));
@@ -157,12 +160,12 @@ export function FaqDialog({ open, onOpenChange }: FaqDialogProps) {
           </div>
 
           {response && (
-            <Card className="border-l-4 border-l-[#000080]">
+            <Card className="border-l-4 border-l-[#000080] bg-[#e6f6ff] shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base">Recommended Action</CardTitle>
+                <CardTitle className="text-lg text-[#000080]">Recommended Action</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-800 leading-6">{response}</p>
+                <p className="text-base text-gray-900 leading-7">{response}</p>
               </CardContent>
             </Card>
           )}

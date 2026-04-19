@@ -370,6 +370,12 @@ html {
     border-color: rgba(153, 102, 0, 0.4);
   }
 
+  .stat-card--escalated:hover {
+    background: linear-gradient(135deg, #fda4af 0%, #fb7185 55%, #f43f5e 100%);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.18);
+    border-color: rgba(225, 29, 72, 0.35);
+  }
+
   .stat-card--overdue:hover {
     background: linear-gradient(135deg, #fda4af 0%, #fb7185 55%, #f43f5e 100%);
     box-shadow: 0 4px 12px rgba(225, 29, 72, 0.18);

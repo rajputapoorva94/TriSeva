@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { AuthService } from '../../lib/auth';
 import { User } from '../../types';
-import { AlertCircle, HelpCircle, Home, Scale, UserPlus, Users } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, HelpCircle, Home, Scale, UserPlus, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { HelpDialog } from '../shared/HelpDialog';
 
@@ -22,6 +22,9 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const emailPattern = /^[A-Za-z0-9]+@[A-Za-z0-9]+\.com$/;
 
   const maskNationalId = (value: string) => {
     if (!value) return '';
@@ -37,6 +40,12 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const handleCitizenLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (citizenId.includes('@') && !emailPattern.test(citizenId.trim())) {
+      setError('Email must be in the format name@domain.com');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -56,6 +65,12 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const handleOfficialLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!emailPattern.test(officialId.trim())) {
+      setError('Email must be in the format name@domain.com');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -188,7 +203,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                     <Input
                       id="citizen-id"
                       type="text"
-                      placeholder="username@xyz.com or Aadhaar/PAN number"
+                      placeholder="username@domain.com or Aadhaar/PAN number"
                       value={citizenId}
                       onChange={(e) => setCitizenId(e.target.value)}
                       required
@@ -202,14 +217,29 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="citizen-password">Password</Label>
-                    <Input
-                      id="citizen-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        id="citizen-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full sm:w-1/2"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <Button type="submit" className="w-1/2" disabled={loading}>
@@ -264,7 +294,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                     <Input
                       id="official-id"
                       type="email"
-                      placeholder="official@gov.in"
+                      placeholder="official@domain.com"
                       value={officialId}
                       onChange={(e) => setOfficialId(e.target.value)}
                       required
@@ -273,14 +303,29 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="official-password">Password</Label>
-                    <Input
-                      id="official-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        id="official-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full sm:w-1/2"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <Button type="submit" className="w-1/2" disabled={loading}>

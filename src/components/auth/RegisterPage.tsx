@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   ArrowLeft,
   Shield,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Alert, AlertDescription } from "../ui/alert";
 
@@ -40,8 +42,10 @@ export function RegisterPage({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [idVerified, setIdVerified] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const emailPattern = /^[A-Za-z0-9]+@xyz\.com$/;
+  const emailPattern = /^[A-Za-z0-9]+@[A-Za-z0-9]+\.com$/;
 
   const maskNationalId = (value: string) => {
     if (!value) return '';
@@ -115,7 +119,7 @@ export function RegisterPage({
     }
 
     if (!emailPattern.test(formData.email)) {
-      setError("Email must be in the format alphanumeric@xyz.com");
+      setError("Email must be in the format name@domain.com");
       return;
     }
 
@@ -200,7 +204,7 @@ export function RegisterPage({
                 </div>
                 <Tabs
                   value={formData.nationalIdType}
-                  onValueChange={(value) =>
+                  onValueChange={(value: string) =>
                     {
                       setFormData({
                         ...formData,
@@ -295,43 +299,73 @@ export function RegisterPage({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="username@xyz.com"
+                  placeholder="username@domain.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
                 <p className="text-sm text-gray-600">
-                  Format: alphanumeric@xyz.com
+                  Format: alphanumeric@domain.com
                 </p>
               </div>
 
               {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="flex items-center gap-2 w-full">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="At least 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full sm:w-1/2"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
                   Confirm Password
                 </Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Re-enter your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="flex items-center gap-2 w-full">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Re-enter your password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full sm:w-1/2"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button
