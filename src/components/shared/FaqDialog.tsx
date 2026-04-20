@@ -110,7 +110,13 @@ export function FaqDialog({ open, onOpenChange }: FaqDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[94vw] sm:w-[90vw] max-w-[1100px] sm:max-w-[1100px] min-h-[65vh] max-h-[92vh] overflow-y-auto">
+      <DialogContent
+        className="w-[96vw] sm:w-[94vw] !max-w-[1240px] sm:!max-w-[1240px] min-h-[72vh] max-h-[94vh] overflow-y-auto !opacity-100 border !border-sky-300 shadow-[0_30px_80px_rgba(15,23,42,0.25)]"
+        style={{
+          background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 45%, #93c5fd 100%)',
+          opacity: 1,
+        }}
+      >
         <DialogHeader className="space-y-2 pb-3 border-b border-[#000080]/10">
           <DialogTitle className="flex items-center gap-2 text-[#000080] font-display">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm border border-[#000080]/10">
@@ -123,8 +129,8 @@ export function FaqDialog({ open, onOpenChange }: FaqDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 mt-4">
-          <div className="flex flex-col gap-3 rounded-xl border border-[#000080]/15 bg-[#e6f6ff] p-4 shadow-sm">
+        <div className="space-y-6 mt-4">
+          <div className="flex flex-col gap-3 rounded-xl border border-[#000080]/15 bg-white p-4 shadow-sm">
             <div className="flex flex-col sm:flex-row gap-3">
               <Input
                 value={userInput}
@@ -160,7 +166,7 @@ export function FaqDialog({ open, onOpenChange }: FaqDialogProps) {
           </div>
 
           {response && (
-            <Card className="border-l-4 border-l-[#000080] bg-[#e6f6ff] shadow-sm">
+            <Card className="border-l-4 border-l-[#000080] bg-white shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg text-[#000080]">Recommended Action</CardTitle>
               </CardHeader>
